@@ -69,7 +69,7 @@ bool CompilerHelpers::isMSVCSupported() noexcept
 
 	if (!vswhere.empty())
 	{
-		std::stringstream cmdResult(System::executeCommand(vswhere.string() + R"( -latest -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find "VC\Tools\MSVC)"));
+		std::stringstream cmdResult(System::executeCommand(vswhere.string() + R"( -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find "VC\Tools\MSVC)"));
 
 		std::string line;
 		while (!cmdResult.eof())
@@ -290,7 +290,7 @@ std::vector<fs::path> CompilerHelpers::getMSVCNativeIncludeDirectories()
 	}
 	else
 	{
-		std::stringstream cmdResult(System::executeCommand(vswhere.string() + R"( -latest -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find "VC\Tools\MSVC\**\include)"));
+		std::stringstream cmdResult(System::executeCommand(vswhere.string() + R"( -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find "VC\Tools\MSVC\**\include)"));
 
 		std::string line;
 		while (!cmdResult.eof())
