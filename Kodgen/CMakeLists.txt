@@ -99,6 +99,12 @@ if (KODGEN_DEV)
 endif()
 
 # Setup language requirements
+if(MSVC)
+	if (MSVC_VERSION GREATER_EQUAL 1914)	# Visual Studio 2017 15.7 or later:
+		message("Visual Studio 2017 15.7 or later detected: enabling /Zc:__cplusplus to force it to match value of /std")
+		target_compile_options(${KodgenTargetLibrary} PUBLIC /Zc:__cplusplus)
+	endif()
+endif()
 target_compile_features(${KodgenTargetLibrary} PUBLIC cxx_std_17)
 
 # Setup include directories
