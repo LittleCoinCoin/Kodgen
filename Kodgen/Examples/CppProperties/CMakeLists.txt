@@ -36,7 +36,7 @@ target_compile_features(${CppPropertiesDemoProjectTarget} PUBLIC cxx_std_17)
 
 set(RunGeneratorTarget RunCppPropertiesGenerator)
 add_custom_target(${RunGeneratorTarget}
-                    WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+                    WORKING_DIRECTORY $<TARGET_FILE_DIR:${KodgenTargetLibrary}>
                     COMMAND ${CppPropertiesDemoProjectGeneratorTarget} ${PROJECT_SOURCE_DIR})
 
 # Run the generator BEFORE building CppPropertiesDemoProjectTarget to refresh generated files

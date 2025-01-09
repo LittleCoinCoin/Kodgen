@@ -2,10 +2,25 @@ cmake_minimum_required(VERSION 3.13.5)
 
 project(KodgenLibrary)
 
+# Setup options for output directories
+set(KODGEN_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Bin CACHE PATH "Output directory for Kodgen library (.exe)")
+message("[Kodgen] Setting up runtime output directory: ${KODGEN_RUNTIME_OUTPUT_DIRECTORY}")
+if ( MSVC )
+	# On Windows, we put the .dll in the same directory as the .exe
+	set(KODGEN_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Bin CACHE PATH "Output directory for Kodgen library (.dll / .so)")
+	message("[Kodgen] Setting up MSVC library output directory: ${KODGEN_LIBRARY_OUTPUT_DIRECTORY}")
+else ()
+	# Oterwise, we put the .so in the same directory as the .a
+	set(KODGEN_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Lib CACHE PATH "Output directory for Kodgen library (.dll / .so)")
+	message("[Kodgen] Setting up non-MSVC library output directory: ${KODGEN_LIBRARY_OUTPUT_DIRECTORY}")
+endif ()
+set(KODGEN_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Lib CACHE PATH "Output directory for Kodgen library (.lib / .a)")
+message("[Kodgen] Setting up archive output directory: ${KODGEN_ARCHIVE_OUTPUT_DIRECTORY}")
+
 # Setup output directory
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Lib)	# .dll / .so
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Lib)	# .lib / .a
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Bin)	# .exe
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${KODGEN_RUNTIME_OUTPUT_DIRECTORY})	# .exe
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${KODGEN_LIBRARY_OUTPUT_DIRECTORY})	# .dll / .so
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${KODGEN_ARCHIVE_OUTPUT_DIRECTORY})	# .lib / .a
 
 set(KodgenTargetLibrary Kodgen)
 
@@ -136,13 +151,15 @@ if (WIN32)
 	add_custom_command(	TARGET ${KodgenTargetLibrary} POST_BUILD
 						COMMAND ${CMAKE_COMMAND} -E copy
 						${PROJECT_SOURCE_DIR}/ThirdParty/x64/Shared/libclang.dll
-						$<IF:$<BOOL:${MSVC}>,${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE}/libclang.dll,${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/libclang.dll>
+						$<TARGET_FILE_DIR:${KodgenTargetLibrary}>
+						COMMENT "Copying libclang.dll to the folder of the Kodgen library: $<TARGET_FILE_DIR:${KodgenTargetLibrary}>"
 					)
 
 	add_custom_command(	TARGET ${KodgenTargetLibrary} POST_BUILD
 						COMMAND ${CMAKE_COMMAND} -E copy
 						${PROJECT_SOURCE_DIR}/ThirdParty/x64/Bin/vswhere.exe
-						$<IF:$<BOOL:${MSVC}>,${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE}/vswhere.exe,${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/vswhere.exe>
+						$<TARGET_FILE_DIR:${KodgenTargetLibrary}>
+						COMMENT "Copying vswhere.exe to the folder of the Kodgen library: $<TARGET_FILE_DIR:${KodgenTargetLibrary}>"
 					)
 endif()
 
