@@ -202,40 +202,6 @@ namespace kodgen
 																				 std::string&)>	generate)			noexcept	= 0;
 
 			/**
-			*	@brief	Instantiate a CodeGenEnv object (using new).
-			*			This method can be overriden to instantiate a child class of CodeGenEnv.
-			* 
-			*	@return A dynamically instantiated (new) CodeGenEnv object used during the whole generation process.
-			*/
-			virtual CodeGenEnv*				createCodeGenEnv()												const	noexcept;
-
-			/**
-			*	@brief	Called just before CodeGenUnit::foreachModuleEntityPair.
-			*			Perform all registered modules initialization and initialize CodeGenEnv fields (logger, FileParsingResult...).
-			*			The whole generation process is aborted if the method returns false.
-			*			/!\ Overrides MUST call this base implementation as well through CodeGenUnit::preGenerateCode(parsingResult, env) /!\
-			* 
-			*	@param parsingResult	Result of a file parsing used to generate code.
-			*	@param env				Generation environment structure.
-			* 
-			*	@return true if the method completed successfully, else false.
-			*/
-			virtual bool					preGenerateCode(FileParsingResult const&	parsingResult,
-															CodeGenEnv&					env)						noexcept;
-
-			/**
-			*	@brief	Called just after CodeGenUnit::foreachModuleEntityPair.
-			*			Can be used to perform any post-generation tasks or cleanup.
-			*			If the unit needs to write the generated code in files, this is typically here
-			*			that files are created and written to.
-			*
-			*	@param env Generation environment structure after the preGenerateCode and generateCodeInternal have run.
-			* 
-			*	@return true if the method completed successfully, else false.
-			*/
-			virtual bool					postGenerateCode(CodeGenEnv& env)										noexcept;
-
-			/**
 			*	@brief Check if file last write time is newer than reference file last write time.
 			*			The method will assert if a path is invalid or is not a file.
 			* 
@@ -283,17 +249,52 @@ namespace kodgen
 			virtual bool				checkSettings()									const	noexcept;
 
 			/**
-			*	@brief	Calls preGenerateCode, foreachModuleEntityPair, and postGenerateCode in that order.
+			*	@brief	Instantiate a CodeGenEnv object (using new).
+			*			This method can be overriden to instantiate a child class of CodeGenEnv.
+			*
+			*	@return A dynamically instantiated (new) CodeGenEnv object used during the whole generation process.
+			*/
+			virtual CodeGenEnv* createCodeGenEnv()												const	noexcept;
+
+			/**
+			*	@brief	Called just before CodeGenUnit::generateCode.
+			*			Perform all registered modules initialization and initialize CodeGenEnv fields (logger, FileParsingResult...).
+			*			The whole generation process is aborted if the method returns false.
+			*			/!\ Overrides MUST call this base implementation as well through CodeGenUnit::preGenerateCode(parsingResult, env) /!\
+			*
+			*	@param parsingResult	Result of a file parsing used to generate code.
+			*	@param env				Generation environment structure.
+			*
+			*	@return true if the method completed successfully, else false.
+			*/
+			virtual bool					preGenerateCode(FileParsingResult const& parsingResult,
+															CodeGenEnv& env)					noexcept;
+
+			/**
+			*	@brief	Called just after CodeGenUnit::generateCode.
+			*			Can be used to perform any post-generation tasks or cleanup.
+			*			If the unit needs to write the generated code in files, this is typically here
+			*			that files are created and written to.
+			*
+			*	@param env Generation environment structure.
+			*
+			*	@return true if the method completed successfully, else false.
+			*/
+			virtual bool					postGenerateCode(CodeGenEnv& env)										noexcept;
+
+			/**
+			*	@brief	Calls initialGenerateCode, foreachModuleEntityPair, and finalGenerateCode in that order.
 			*			If any of the previously mentioned method returns false, the generation aborts (next methods
 			*			will not be called).
 			*
-			*			ex: If preGenerateCode returns false, both foreachModuleEntityPair and postGenerateCode calls will be skipped.
+			*			ex: If initialGenerateCode returns false, both foreachModuleEntityPair and finalGenerateCode calls will be skipped.
 			*			
 			*	@param parsingResult	Result of a file parsing used to generate code.
+			*	@param env
 			* 
-			*	@return true if preGenerateCode, foreachModuleEntityPair and postGenerateCode calls have succeeded, else false.
+			*	@return true if initialGenerateCode, foreachModuleEntityPair and finalGenerateCode calls have succeeded, else false.
 			*/
-			bool						generateCode(FileParsingResult const& parsingResult)	noexcept;
+			bool						generateCode(FileParsingResult const& parsingResult, CodeGenEnv& env)	noexcept;
 
 			/**
 			*	@brief Add a module to the internal list of generation modules.

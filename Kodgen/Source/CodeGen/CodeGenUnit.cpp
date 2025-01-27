@@ -101,46 +101,23 @@ bool CodeGenUnit::isFileNewerThan(fs::path const& file, fs::path const& referenc
 	return fs::last_write_time(file) > fs::last_write_time(referenceFile);
 }
 
-bool CodeGenUnit::generateCode(FileParsingResult const& parsingResult) noexcept
+bool CodeGenUnit::generateCode(FileParsingResult const& parsingResult, CodeGenEnv& env) noexcept
 {
-	//TODO: Should probably use std::unique_ptr here instead of a raw pointer to be exception-safe
-	CodeGenEnv* env = createCodeGenEnv();
-	
-	//If you assert/crash here, means the createCodeGenEnv method returned nullptr
-	//Check the implementation in the CodeGenUnit you use.
-	assert(env != nullptr);
+	std::vector<ICodeGenerator*> const& codeGenerators = getSortedCodeGenerators();
 
-	//Pre-generation step
-	bool result = preGenerateCode(parsingResult, *env);
+	bool result = true;
 
-	//Generation step (per module/entity pair), runs only if the pre-generation step succeeded
+	//Call initialGenerateCode on all ICodeGenerators first
+	initialGenerateCodeInternal(codeGenerators, env);
+
+	//Iterate over each module and entity and generate code
+	result &= foreachCodeGenEntityPair(std::bind(&CodeGenUnit::generateCodeForEntityInternal, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), env) != ETraversalBehaviour::AbortWithFailure;
+
 	if (result)
 	{
-		std::vector<ICodeGenerator*> const& codeGenerators = getSortedCodeGenerators();
-
-		//Call initialGenerateCode on all ICodeGenerators first
-		initialGenerateCodeInternal(codeGenerators, *env);
-
-		if (result)
-		{
-			//Iterate over each module and entity and generate code
-			result &= foreachCodeGenEntityPair(std::bind(&CodeGenUnit::generateCodeForEntityInternal, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), *env) != ETraversalBehaviour::AbortWithFailure;
-
-			if (result)
-			{
-				//Final call to generate code with a nullptr entity
-				finalGenerateCodeInternal(codeGenerators, *env);
-
-				//Post-generation step, runs only if all previous steps succeeded
-				if (result)
-				{
-					result &= postGenerateCode(*env);
-				}
-			}
-		}
+		//Final call to generate code with a nullptr entity
+		finalGenerateCodeInternal(codeGenerators, env);
 	}
-
-	delete env;
 
 	return result;
 }

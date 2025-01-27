@@ -85,13 +85,6 @@ namespace kodgen
 
 		protected:
 			/**
-			*	@brief	Instantiate a MacroCodeGenEnv object (using new).
-			* 
-			*	@return A dynamically instantiated (new) MacroCodeGenEnv object used during the whole generation process.
-			*/
-			virtual MacroCodeGenEnv*	createCodeGenEnv()												const	noexcept	override;
-
-			/**
 			*	@brief	Call generate 3 times with the given environment, by updating the environment between each call
 			*			(MacroCodeGenEnv::codeGenLocation and MacroCodeGenEnv::separator are updated).
 			*			ECodeGenLocation::ClassFooter since this location depends on an entity.
@@ -129,27 +122,36 @@ namespace kodgen
 																				 CodeGenEnv&,
 																				 std::string&)>		generate)	noexcept	override;
 
+		public:
+
+			/**
+			*	@brief	Instantiate a MacroCodeGenEnv object (using new).
+			*
+			*	@return A dynamically instantiated (new) MacroCodeGenEnv object used during the whole generation process.
+			*/
+			virtual MacroCodeGenEnv* createCodeGenEnv()												const	noexcept	override;
+
 			/**
 			*	@brief Reset internally used variables to prepare the generation step.
-			* 
+			*
 			*	@param parsingResult	Result of a file parsing used to generate code.
 			*	@param env				Generation environment structure.
-			* 
+			*
 			*	@return true if the method completed successfully, else false.
 			*/
-			virtual bool				preGenerateCode(FileParsingResult const&	parsingResult,
-														CodeGenEnv&					env)						noexcept	override;
+			virtual bool				preGenerateCode(FileParsingResult const& parsingResult,
+				CodeGenEnv& env)						noexcept	override;
 
 			/**
 			*	@brief	Create/update the header and source files and fill them with the generated code.
-			* 
+			*
 			*	@param env				Generation environment structure.
-			* 
+			*
 			*	@return true if the method completed successfully, else false.
 			*/
 			virtual bool				postGenerateCode(CodeGenEnv& env)										noexcept	override;
 
-		public:
+
 			/**
 			*	@brief	Check that both the generated header and source files are newer than the source file.
 			*			If the generated header file doesn't exist, create it and leave it empty.

@@ -41,15 +41,37 @@ void CodeGenManager::processFiles(FileParserType& fileParser, CodeGenUnitType& c
 
 				//Copy the generation unit model to have a fresh one for this generation unit
 				CodeGenUnitType	generationUnit = codeGenUnit;
+				CodeGenEnv* env = generationUnit.createCodeGenEnv();
 
 				//Get the result of the parsing task
 				FileParsingResult parsingResult = TaskHelper::getDependencyResult<FileParsingResult>(parsingTask, 0u);
 
+				//If you assert/crash here, means the createCodeGenEnv method returned nullptr
+				//Check the implementation in the CodeGenUnit you use.
+				assert(env != nullptr);
+
 				//Generate the file if no errors occured during parsing
 				if (parsingResult.errors.empty())
 				{
-					out_generationResult.completed = generationUnit.generateCode(parsingResult);
+					//Pre-generation step
+					bool result = generationUnit.preGenerateCode(parsingResult, *env);
+
+					//Generation step (per module/entity pair), runs only if the pre-generation step succeeded
+					if (result)
+					{
+						result &= generationUnit.generateCode(parsingResult, *env);
+
+						//Post-generation step, runs only if the generation step succeeded
+						if (result)
+						{
+							result &= generationUnit.postGenerateCode(*env);
+						}
+					}
+
+					out_generationResult.completed = result;
 				}
+
+				delete env;
 
 				return out_generationResult;
 			};
