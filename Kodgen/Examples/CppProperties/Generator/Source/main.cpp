@@ -125,7 +125,8 @@ int main(int argc, char** argv)
 
 	//Kick-off code generation
 	kodgen::CodeGenResult genResult = codeGenMgr.run(fileParser, codeGenUnit,
-		kodgen::EGenerationStrategies::ForceReparseAll | kodgen::EGenerationStrategies::ForceRegenerateAll);
+		kodgen::EGenerationStrategies::ForceReparseAll | kodgen::EGenerationStrategies::ForceRegenerateAll |
+		kodgen::EGenerationStrategies::OneGenerateForEachFile);
 
 	if (genResult.completed)
 	{

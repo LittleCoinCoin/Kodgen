@@ -30,7 +30,9 @@ namespace kodgen
 			ThreadPool	_threadPool;
 
 			/**
-			*	@brief Process all provided files on multiple threads.
+			*	@brief Runs the parsing and generation process for each file in the provided collection.
+			*			This leads to generating a file for each parsed file.
+			*	@details Process all provided files on multiple threads.
 			*	
 			*	@param fileParser		Original file parser to use to parse registered files. A copy of this parser will be used for each generation thread.
 			*	@param codeGenUnit		Generation unit used to generate files. It must have a clean state when this method is called.
@@ -38,10 +40,10 @@ namespace kodgen
 			*	@param out_genResult	Reference to the generation result to fill during file generation.
 			*/
 			template <typename FileParserType, typename CodeGenUnitType>
-			void	processFiles(FileParserType&			fileParser,
-								 CodeGenUnitType&			codeGenUnit,
-								 std::set<fs::path> const&	toProcessFiles,
-								 CodeGenResult&				out_genResult)										noexcept;
+			void	oneGenerateForEachParsedFile(FileParserType&			fileParser,
+												 CodeGenUnitType&			codeGenUnit,
+												 std::set<fs::path> const&	toProcessFiles,
+												 CodeGenResult&				out_genResult)					noexcept;
 
 			/**
 			*	@brief Identify all files which will be parsed & regenerated.

@@ -6,7 +6,7 @@
 */
 
 template <typename FileParserType, typename CodeGenUnitType>
-void CodeGenManager::processFiles(FileParserType& fileParser, CodeGenUnitType& codeGenUnit, std::set<fs::path> const& toProcessFiles, CodeGenResult& out_genResult) noexcept
+void CodeGenManager::oneGenerateForEachParsedFile(FileParserType& fileParser, CodeGenUnitType& codeGenUnit, std::set<fs::path> const& toProcessFiles, CodeGenResult& out_genResult) noexcept
 {
 	std::vector<std::shared_ptr<TaskBase>>	generationTasks;
 	uint8									iterationCount = codeGenUnit.getIterationCount();
@@ -134,7 +134,19 @@ CodeGenResult CodeGenManager::run(FileParserType& fileParser, CodeGenUnitType& c
 			generateMacrosFile(fileParser.getSettings(), codeGenUnit.getSettings()->getOutputDirectory());
 
 			//Start files processing
-			processFiles(fileParser, codeGenUnit, filesToProcess, genResult);
+			if (generationStrategies && EGenerationStrategies::OneGenerateForEachFile)
+			{
+				oneGenerateForEachParsedFile(fileParser, codeGenUnit, filesToProcess, genResult);
+			}
+			else if (generationStrategies && EGenerationStrategies::OneGenerateForAllFiles)
+			{
+				//Not implemented yet
+				assert(false);
+			}
+			else
+			{
+				assert(false);//Unhandled generation strategy
+			}
 		}
 
 		genResult.duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count() * 0.001f;
