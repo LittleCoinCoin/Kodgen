@@ -10,7 +10,8 @@ CodeGenManager::CodeGenManager(uint32 threadCount) noexcept:
 {
 }
 
-std::set<fs::path> CodeGenManager::identifyFilesToProcess(CodeGenUnit const& codeGenUnit, CodeGenResult& out_genResult, bool forceRegenerateAll) noexcept
+std::set<fs::path> CodeGenManager::identifyFilesToProcess(CodeGenUnit const& codeGenUnit,
+	CodeGenResult& out_genResult, EGenerationStrategies generationStrategy) noexcept
 {
 	std::set<fs::path> result;
 
@@ -19,7 +20,7 @@ std::set<fs::path> CodeGenManager::identifyFilesToProcess(CodeGenUnit const& cod
 	{
 		if (fs::exists(path) && !fs::is_directory(path))
 		{
-			if (!codeGenUnit.isUpToDate(path) || forceRegenerateAll)
+			if (!codeGenUnit.isUpToDate(path) || (generationStrategy && EGenerationStrategies::ForceReparseAll))
 			{
 				result.emplace(path);
 			}
@@ -51,7 +52,7 @@ std::set<fs::path> CodeGenManager::identifyFilesToProcess(CodeGenUnit const& cod
 					{
 						if (settings.isSupportedFileExtension(entry.path().extension()) && !settings.isIgnoredFile(entry.path()))
 						{
-							if (!codeGenUnit.isUpToDate(entry.path()) || forceRegenerateAll)
+							if (!codeGenUnit.isUpToDate(entry.path()) || (generationStrategy && EGenerationStrategies::ForceRegenerateAll))
 							{
 								result.emplace(entry.path());
 							}

@@ -101,7 +101,7 @@ void CodeGenManager::processFiles(FileParserType& fileParser, CodeGenUnitType& c
 }
 
 template <typename FileParserType, typename CodeGenUnitType>
-CodeGenResult CodeGenManager::run(FileParserType& fileParser, CodeGenUnitType& codeGenUnit, bool forceRegenerateAll) noexcept
+CodeGenResult CodeGenManager::run(FileParserType& fileParser, CodeGenUnitType& codeGenUnit, EGenerationStrategies generationStrategies) noexcept
 {
 	//Check FileParser validity
 	static_assert(std::is_base_of_v<FileParser, FileParserType>, "fileParser type must be a derived class of kodgen::FileParser.");
@@ -122,7 +122,7 @@ CodeGenResult CodeGenManager::run(FileParserType& fileParser, CodeGenUnitType& c
 	{
 		//Start timer here
 		auto				start			= std::chrono::high_resolution_clock::now();
-		std::set<fs::path>	filesToProcess	= identifyFilesToProcess(codeGenUnit, genResult, forceRegenerateAll);
+		std::set<fs::path>	filesToProcess	= identifyFilesToProcess(codeGenUnit, genResult, generationStrategies);
 
 		//Don't setup anything if there are no files to generate
 		if (filesToProcess.size() > 0u)

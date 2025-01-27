@@ -1,5 +1,6 @@
 #include <Kodgen/Parsing/FileParser.h>
 #include <Kodgen/CodeGen/CodeGenManager.h>
+#include <Kodgen/CodeGen/EGenerationStrategies.h>
 #include <Kodgen/CodeGen/Macro/MacroCodeGenUnit.h>
 #include <Kodgen/CodeGen/Macro/MacroCodeGenUnitSettings.h>
 #include <Kodgen/Misc/Filesystem.h>
@@ -123,7 +124,8 @@ int main(int argc, char** argv)
 	initCodeGenManagerSettings(workingDirectory, codeGenMgr.settings);
 
 	//Kick-off code generation
-	kodgen::CodeGenResult genResult = codeGenMgr.run(fileParser, codeGenUnit, true);
+	kodgen::CodeGenResult genResult = codeGenMgr.run(fileParser, codeGenUnit,
+		kodgen::EGenerationStrategies::ForceReparseAll | kodgen::EGenerationStrategies::ForceRegenerateAll);
 
 	if (genResult.completed)
 	{

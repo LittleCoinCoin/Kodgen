@@ -16,6 +16,7 @@
 #include "Kodgen/CodeGen/CodeGenResult.h"
 #include "Kodgen/CodeGen/CodeGenUnit.h"
 #include <Kodgen/CodeGen/CodeGenManagerSettings.h>
+#include "Kodgen/CodeGen/EGenerationStrategies.h"
 #include "Kodgen/Parsing/FileParser.h"
 #include "Kodgen/Threading/ThreadPool.h"
 #include "Kodgen/Threading/TaskHelper.h"
@@ -47,13 +48,15 @@ namespace kodgen
 			*	
 			*	@param codeGenUnit			Generation unit used to determine whether a file should be reparsed/regenerated or not.
 			*	@param out_genResult		Reference to the generation result to fill during file generation.
-			*	@param forceRegenerateAll	Should all files be regenerated or not (regardless of CodeGenManager::shouldRegenerateFile() returned value).
+			*	@param generationStrategy	A byte with flags from EGenerationStrategies to orient the generation process. 
+			*								In particular, the EGenerationStrategies::ForceReparseAll and EGenerationStrategies::ForceRegenerateAll
+											flags can be used to force all files to be reprocessed.
 			*
 			*	@return A collection of all files which will be regenerated.
 			*/
 			std::set<fs::path>		identifyFilesToProcess(CodeGenUnit const&	codeGenUnit,
 														   CodeGenResult&		out_genResult,
-														   bool					forceRegenerateAll)				noexcept;
+														   EGenerationStrategies generationStrategy)				noexcept;
 
 			/**
 			*	@brief	Get the number of threads to use based on the provided thread count.
@@ -108,14 +111,14 @@ namespace kodgen
 			*
 			*	@param fileParser			Original file parser to use to parse registered files. A copy of this parser will be used for each generation thread.
 			*	@param codeGenUnit			Generation unit used to generate code. It must have a clean state when this method is called.
-			*	@param forceRegenerateAll	Ignore the last write time check and reparse / regenerate all files.
+			*	@param generationStrategy	A byte with flags from EGenerationStrategies to orient the generation process.
 			*
 			*	@return Structure containing file generation report.
 			*/
 			template <typename FileParserType, typename CodeGenUnitType>
 			CodeGenResult run(FileParserType&	fileParser,
 							  CodeGenUnitType&	codeGenUnit,
-							  bool				forceRegenerateAll	= false)	noexcept;
+							  EGenerationStrategies	generationStrategy = EGenerationStrategies::Undefined)	noexcept;
 	};
 
 	#include "Kodgen/CodeGen/CodeGenManager.inl"
