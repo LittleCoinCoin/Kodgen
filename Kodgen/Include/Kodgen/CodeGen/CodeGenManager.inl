@@ -54,7 +54,7 @@ void CodeGenManager::oneGenerateForEachParsedFile(FileParserType& fileParser, Co
 				if (parsingResult.errors.empty())
 				{
 					//Pre-generation step
-					bool result = generationUnit.preGenerateCode(parsingResult, *env);
+					bool result = generationUnit.preGenerateCode(*env);
 
 					//Generation step (per module/entity pair), runs only if the pre-generation step succeeded
 					if (result)
@@ -101,15 +101,13 @@ void CodeGenManager::oneGenerateForEachParsedFile(FileParserType& fileParser, Co
 }
 
 template <typename FileParserType, typename CodeGenUnitType>
-void	oneGenerateForAllParsedFiles(FileParserType& fileParser, CodeGenUnitType& codeGenUnit, std::set<fs::path> const& toProcessFiles, CodeGenResult& out_genResult)	noexcept
+void CodeGenManager::oneGenerateForAllParsedFiles(FileParserType& fileParser, CodeGenUnitType& codeGenUnit, std::set<fs::path> const& toProcessFiles, CodeGenResult& out_genResult)	noexcept
 {
 	uint8	iterationCount = codeGenUnit.getIterationCount();
 
 	//Launch all parsing -> generation processes
 	std::vector<std::shared_ptr<TaskBase>> parsingTasks;
 	parsingTasks.reserve(toProcessFiles.size() * iterationCount);
-	std::vector<FileParsingResult> parsingResults;
-	parsingResults.reserve(toProcessFiles.size() * iterationCount);
 
 	for (int i = 0; i < iterationCount; i++)
 	{
@@ -143,48 +141,50 @@ void	oneGenerateForAllParsedFiles(FileParserType& fileParser, CodeGenUnitType& c
 		_threadPool.joinWorkers();
 	}
 
-	bool noParsingError = true;
+	//Copy the generation unit model to have a fresh one for this generation unit
+	CodeGenUnitType	generationUnit = codeGenUnit;
+	CodeGenEnv* env = generationUnit.createCodeGenEnv();
+
+	//If you assert/crash here, means the createCodeGenEnv method returned nullptr
+	//Check the implementation in the CodeGenUnit you use.
+	assert(env != nullptr);
+
+	//Pre-generation step
+	bool result = generationUnit.preGenerateCode(*env);
+
+	//Generation step (per module/entity pair), runs only if the pre-generation step succeeded
 	for (std::shared_ptr<TaskBase>& task : parsingTasks)
 	{
-		parsingResults.emplace_back(TaskHelper::getDependencyResult<FileParsingResult>(parsingTask, 0u));
-		noParsingError &= parsingResults.back().errors.empty();
-	}
-
-	if (noParsingError)
-	{
-		//Copy the generation unit model to have a fresh one for this generation unit
-		CodeGenUnitType	generationUnit = codeGenUnit;
-		CodeGenEnv* env = generationUnit.createCodeGenEnv();
-
-		//Get the result of the parsing task
-		FileParsingResult parsingResult = TaskHelper::getDependencyResult<FileParsingResult>(parsingTask, 0u);
-
-		//If you assert/crash here, means the createCodeGenEnv method returned nullptr
-		//Check the implementation in the CodeGenUnit you use.
-		assert(env != nullptr);
-
-		//Pre-generation step
-		bool result = generationUnit.preGenerateCode(parsingResult, *env);
-
-		//Generation step (per module/entity pair), runs only if the pre-generation step succeeded
-		for (FileParsingResult const& parsingResult : parsingResults)
-		{
-			if (result)
-			{
-				result &= generationUnit.generateCode(parsingResult, *env);
-			}
-		}
-
-		//Post-generation step, runs only if the generation step succeeded
 		if (result)
 		{
-			result &= generationUnit.postGenerateCode(*env);
+			FileParsingResult parsingResult = TaskHelper::getResult<FileParsingResult>(task.get());
+			result &= parsingResult.errors.empty();
+			if(result)
+			{
+				result &= generationUnit.generateCode(parsingResult, *env);
+				if (!result)
+				{
+					logger->log("Generation for file " + parsingResult.parsedFile.string() + ": Failure. Interrupting the generation process.", ILogger::ELogSeverity::Error);
+					break;
+				}
+			}
+			else
+			{
+				logger->log("Parsing result for file " + parsingResult.parsedFile.string() + ": Failure. Interrupting the generation process.", ILogger::ELogSeverity::Error);
+				break;
+			}
 		}
-
-		out_generationResult.completed = result;
-
-		delete env;
 	}
+
+	//Post-generation step, runs only if the generation step succeeded
+	if (result)
+	{
+		result &= generationUnit.postGenerateCode(*env);
+	}
+
+	out_genResult.completed = result;
+
+	delete env;
 }
 
 template <typename FileParserType, typename CodeGenUnitType>

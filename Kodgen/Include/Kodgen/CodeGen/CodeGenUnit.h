@@ -258,17 +258,15 @@ namespace kodgen
 
 			/**
 			*	@brief	Called just before CodeGenUnit::generateCode.
-			*			Perform all registered modules initialization and initialize CodeGenEnv fields (logger, FileParsingResult...).
+			*			Perform all registered modules initialization and initialize CodeGenEnv fields (logger).
 			*			The whole generation process is aborted if the method returns false.
-			*			/!\ Overrides MUST call this base implementation as well through CodeGenUnit::preGenerateCode(parsingResult, env) /!\
+			*			/!\ Overrides MUST call this base implementation as well through CodeGenUnit::preGenerateCode(env) /!\
 			*
-			*	@param parsingResult	Result of a file parsing used to generate code.
 			*	@param env				Generation environment structure.
 			*
 			*	@return true if the method completed successfully, else false.
 			*/
-			virtual bool					preGenerateCode(FileParsingResult const& parsingResult,
-															CodeGenEnv& env)					noexcept;
+			virtual bool					preGenerateCode(CodeGenEnv& env)					noexcept;
 
 			/**
 			*	@brief	Called just after CodeGenUnit::generateCode.

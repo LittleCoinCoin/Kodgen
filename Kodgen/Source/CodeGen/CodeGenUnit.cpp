@@ -103,6 +103,8 @@ bool CodeGenUnit::isFileNewerThan(fs::path const& file, fs::path const& referenc
 
 bool CodeGenUnit::generateCode(FileParsingResult const& parsingResult, CodeGenEnv& env) noexcept
 {
+	env._fileParsingResult = &parsingResult;
+
 	std::vector<ICodeGenerator*> const& codeGenerators = getSortedCodeGenerators();
 
 	bool result = true;
@@ -209,11 +211,10 @@ CodeGenEnv* CodeGenUnit::createCodeGenEnv() const noexcept
 	return new CodeGenEnv();
 }
 
-bool CodeGenUnit::preGenerateCode(FileParsingResult const& parsingResult, CodeGenEnv& env) noexcept
+bool CodeGenUnit::preGenerateCode(CodeGenEnv& env) noexcept
 {
-	//Setup generation environment
-	env._fileParsingResult	= &parsingResult;
-	env._logger				= logger;
+	//Setup generation environment's logger
+	env._logger	= logger;
 
 	return true;
 }

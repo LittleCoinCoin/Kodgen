@@ -84,9 +84,9 @@ void MacroCodeGenUnit::generateCodeForEntity(EntityInfo const& entity, CodeGenEn
 	}
 }
 
-bool MacroCodeGenUnit::preGenerateCode(FileParsingResult const& parsingResult, CodeGenEnv& env) noexcept
+bool MacroCodeGenUnit::preGenerateCode(CodeGenEnv& env) noexcept
 {
-	if (CodeGenUnit::preGenerateCode(parsingResult, env))
+	if (CodeGenUnit::preGenerateCode(env))
 	{
 		MacroCodeGenEnv& macroEnv = static_cast<MacroCodeGenEnv&>(env);
 		macroEnv._exportSymbolMacro = getSettings()->getExportSymbolMacroName();
