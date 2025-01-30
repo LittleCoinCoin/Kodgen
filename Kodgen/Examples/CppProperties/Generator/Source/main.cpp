@@ -6,7 +6,7 @@
 #include <Kodgen/Misc/Filesystem.h>
 #include <Kodgen/Misc/DefaultLogger.h>
 
-#include "GetSetCGM.h"
+#include "Macro/GetSetCGM.h"
 
 void initCodeGenUnitSettings(fs::path const& workingDirectory, kodgen::MacroCodeGenUnitSettings& out_cguSettings)
 {
