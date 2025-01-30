@@ -7,8 +7,11 @@
 #include <Kodgen/Misc/DefaultLogger.h>
 
 #include "Macro/GetSetCGM.h"
+#include "DataState/DataStateCGU.hpp"
+#include "DataState/DataStateCGM.hpp"
 
-void initCodeGenUnitSettings(fs::path const& workingDirectory, kodgen::MacroCodeGenUnitSettings& out_cguSettings)
+
+void initCodeGenUnitSettingsOneGenForEach(fs::path const& workingDirectory, kodgen::MacroCodeGenUnitSettings& out_cguSettings)
 {
 	//All generated files will be located in WorkingDir/Include/Generated
 	out_cguSettings.setOutputDirectory(workingDirectory / "Include" / "Generated");
@@ -18,6 +21,18 @@ void initCodeGenUnitSettings(fs::path const& workingDirectory, kodgen::MacroCode
 	out_cguSettings.setGeneratedSourceFileNamePattern("##FILENAME##.src.h");
 	out_cguSettings.setClassFooterMacroPattern("##CLASSFULLNAME##_GENERATED");
 	out_cguSettings.setHeaderFileFooterMacroPattern("File_##FILENAME##_GENERATED");
+}
+
+void initCodeGenUnitSettingsOneGenForAll(fs::path const& workingDirectory, DataStateCGUS& out_cguSettings)
+{
+	//All generated files will be located in WorkingDir/Include/Generated
+	out_cguSettings.setOutputDirectory(workingDirectory / "Include" / "Generated");
+
+	//Setup generated file options
+	out_cguSettings.setNamespaceName("");//same as default, just to show how to set it
+	out_cguSettings.setClassName("DataState");//same as default, just to show how to set it
+	out_cguSettings.setFileName("DataState");//same as default, just to show how to set it
+	out_cguSettings.setHeaderFileExtension(".h.hpp");//same as default, just to show how to set it
 }
 
 void initCodeGenManagerSettings(fs::path const& workingDirectory, kodgen::CodeGenManagerSettings& out_generatorSettings)
@@ -105,32 +120,47 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 
-	//Setup code generation unit
-	kodgen::MacroCodeGenUnit codeGenUnit;
-	codeGenUnit.logger = &logger;
-
-	kodgen::MacroCodeGenUnitSettings cguSettings;
-	initCodeGenUnitSettings(workingDirectory, cguSettings);
-	codeGenUnit.setSettings(cguSettings);
-
-	//Add code generation modules
-	GetSetCGM getSetCodeGenModule;
-	codeGenUnit.addModule(getSetCodeGenModule);
-
 	//Setup CodeGenManager
 	kodgen::CodeGenManager codeGenMgr;
 	codeGenMgr.logger = &logger;
 
 	initCodeGenManagerSettings(workingDirectory, codeGenMgr.settings);
+	
+	//Setup code generation unit for one generate for each file
+	kodgen::MacroCodeGenUnit macroCodeGenUnit;
+	macroCodeGenUnit.logger = &logger;
+
+	kodgen::MacroCodeGenUnitSettings cguSettings;//Add code generation unit settings
+	initCodeGenUnitSettingsOneGenForEach(workingDirectory, cguSettings);
+	macroCodeGenUnit.setSettings(cguSettings);
+	
+	GetSetCGM getSetCodeGenModule;//Add code generation modules
+	macroCodeGenUnit.addModule(getSetCodeGenModule);
+
+	//Setup code generation unit for one generate for all files
+	DataStateCGU dataStateCodeGenUnit;
+	dataStateCodeGenUnit.logger = &logger;
+
+	DataStateCGUS dataStateCodeGenUnitSettings;//Add code generation unit settings
+	initCodeGenUnitSettingsOneGenForAll(workingDirectory, dataStateCodeGenUnitSettings);
+	dataStateCodeGenUnit.setSettings(dataStateCodeGenUnitSettings);
+
+	DataStateCGM dataStateCodeGenModule;//Add code generation modules
+	dataStateCodeGenUnit.addModule(dataStateCodeGenModule);
 
 	//Kick-off code generation
-	kodgen::CodeGenResult genResult = codeGenMgr.run(fileParser, codeGenUnit,
-		kodgen::EGenerationStrategies::ForceReparseAll | kodgen::EGenerationStrategies::ForceRegenerateAll |
+	kodgen::EGenerationStrategies reparseAndRegenAll = kodgen::EGenerationStrategies::ForceReparseAll | kodgen::EGenerationStrategies::ForceRegenerateAll;
+	kodgen::CodeGenResult genResultOneGenForEach = codeGenMgr.run(fileParser, macroCodeGenUnit, reparseAndRegenAll |
 		kodgen::EGenerationStrategies::OneGenerateForEachFile);
+	kodgen::CodeGenResult genResultOneGenForAll = codeGenMgr.run(fileParser, dataStateCodeGenUnit, reparseAndRegenAll |
+		kodgen::EGenerationStrategies::OneGenerateForAllFiles);
 
-	if (genResult.completed)
+	if (genResultOneGenForEach.completed && genResultOneGenForAll.completed)
 	{
-		logger.log("Generation completed successfully in " + std::to_string(genResult.duration) + " seconds.");
+		logger.log("Generation completed successfully in " +
+			std::to_string(genResultOneGenForEach.duration) +
+			std::to_string(genResultOneGenForAll.duration) +
+			" seconds.");
 	}
 	else
 	{

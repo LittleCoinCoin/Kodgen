@@ -15,7 +15,7 @@ namespace SomeNamespace KGNamespace()
 		T* someT = nullptr;
 	};
 
-	class KGClass() SomeOtherClass
+	class KGClass(Data) SomeOtherClass
 	{
 		private:
 			KGField(Get[const, &])

@@ -8,7 +8,7 @@ namespace SomeNamespace KGNamespace()
 {
 	namespace np1 KGNamespace()
 	{
-		class KGClass() SomeClass
+		class KGClass(Data) SomeClass
 		{
 			public:
 				class SomeNestedClass{};

@@ -1,11 +1,18 @@
 #include <iostream>
 
-#include "SomeClass.h"
-#include "SomeOtherClass.h"
+#include "Generated/DataState.h.hpp"
 
 int main()
 {
-	SomeNamespace::np1::SomeClass					someClass;
+	DataState dataState;
+
+	dataState.EmplaceBackData<DataState::DataType_SomeClass>();
+	dataState.EmplaceBackData<DataState::DataType_SomeOtherClass>();
+
+	//Get the last element of the vector of SomeClass
+	SomeNamespace::np1::SomeClass& someClass = std::get<std::vector<SomeNamespace::np1::SomeClass>*>(dataState.GetDatasPtrVar<DataState::DataType_SomeClass>())->back();
+	
+	//Instantiate a nested class
 	SomeNamespace::np1::SomeClass::SomeNestedClass	someNestedClass;
 
 	std::cout << someClass.get_someChar()				<< std::endl;
@@ -27,7 +34,8 @@ int main()
 	std::cout << someClass.get_someUnsignedLongLong()	<< std::endl;
 	std::cout << someClass.get_someString()				<< std::endl;
 
-	SomeNamespace::SomeOtherClass	someOtherClass;
+	//Get the last element of the vector of SomeOtherClass
+	SomeNamespace::SomeOtherClass	someOtherClass = std::get<std::vector<SomeNamespace::SomeOtherClass>*>(dataState.GetDatasPtrVar<DataState::DataType_SomeOtherClass>())->back();
 
 	std::cout << someOtherClass.get_someFloat() << std::endl;
 	std::cout << someOtherClass.get_someVectorOfInt().data() << std::endl;
